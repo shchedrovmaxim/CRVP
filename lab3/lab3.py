@@ -12,9 +12,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dropout, Dense, Activation
 from sklearn.metrics import roc_auc_score
-
+import time
 import seaborn as sns
-
+import statistics
 
 def train_test_split(data,test_size):
     """test size in persentage"""
@@ -93,61 +93,72 @@ def load_desc_model(height, num_classes):
 
 
 if __name__ == "__main__":
-    # other_images = os.listdir('lab2/img1')
-    # folder_name = 'data'
-    # image_for_train = os.listdir(f'lab2/{folder_name}')
+    time_m = []
+    other_images = os.listdir('lab2/img1')
+    folder_name = 'data'
+    image_for_train = os.listdir(f'lab2/{folder_name}')
 
-    # random_data = np.random.choice(other_images,size=70)
-    # print("here all is ok")
-    # data = []
-    # for img in random_data:
-    #     data.append(img)
-    # data += image_for_train
-    # X_train, X_test = train_test_split(data,0.5)
-    # y_train = []
-    # y_test = []
-    # for img in X_train:
-    #     if "I" == img[0]:
-    #         y_train.append(0)
-    #     else: 
-    #         y_train.append(1)
-    # for img in X_test:
-    #     if "I" == img[0]:
-    #         y_test.append(0)
-    #     else: 
-    #         y_test.append(1)
+    random_data = np.random.choice(other_images,size=70)
+    print("here all is ok")
+    data = []
+    for img in random_data:
+        data.append(img)
+    data += image_for_train
+    X_train, X_test = train_test_split(data,0.5)
+    y_train = []
+    y_test = []
+    for img in X_train:
+        if "I" == img[0]:
+            y_train.append(0)
+        else: 
+            y_train.append(1)
+    for img in X_test:
+        if "I" == img[0]:
+            y_test.append(0)
+        else: 
+            y_test.append(1)
     
-    # print("here and all is ok 2")
-    # X_train = np.array(X_train)
-    # X_test = np.array(X_test)
-    # y_test = np.array(y_test)
-    # y_train = np.array(y_train)
+    print("here and all is ok 2")
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+    y_test = np.array(y_test)
+    y_train = np.array(y_train)
 
-    # x_test_desc = []
-    # for img in X_test:
-    #     if "I" == img[0] or "p" == img[0]:
-    #         des = get_key_pts(cv2.imread("lab2/img1/" + str(img),0))
-    #     else:
-    #         des = get_key_pts(cv2.imread("lab2/data/" + str(img),0))
-    #     des/=255.0
-    #     x_test_desc.append(des)
-    # print('here and all is ok 3')
-    # x_test_desc = to_same_dims(x_test_desc, 256)
-    # x_train_desc = []
-    # for img in X_train:
-    #     if "I" == img[0] or "p" == img[0]:
-    #         des = get_key_pts(cv2.imread("lab2/img1/" + str(img),0))
-    #     else:
-    #         des = get_key_pts(cv2.imread("lab2/data/" + str(img),0))
-    #     des/=255.0
-    #     x_train_desc.append(des)
-    # x_train_desc = to_same_dims(x_train_desc, 256)
-    # print('here and all is ok 4')
+    x_test_desc = []
+    for img in X_test:
+        if "I" == img[0] or "p" == img[0]:
+            st = time.time()
+            des = get_key_pts(cv2.imread("lab2/img1/" + str(img),0))
+            end = time.time()
+            time_m.append(end - st)
+        else:
+            st = time.time()
+            des = get_key_pts(cv2.imread("lab2/data/" + str(img),0))
+            end = time.time()
+            time_m.append(end - st)
+        des/=255.0
+        x_test_desc.append(des)
+    print('here and all is ok 3')
+    x_test_desc = to_same_dims(x_test_desc, 256)
+    x_train_desc = []
+    for img in X_train:
+        if "I" == img[0] or "p" == img[0]:
+            des = get_key_pts(cv2.imread("lab2/img1/" + str(img),0))
+        else:
+            des = get_key_pts(cv2.imread("lab2/data/" + str(img),0))
+        des/=255.0
+        x_train_desc.append(des)
+    x_train_desc = to_same_dims(x_train_desc, 256)
+    print('here and all is ok 4')
 
-    # np.savetxt('x_train.csv',x_train_desc, delimiter=',')
-    # np.savetxt('x_test.csv',x_test_desc, delimiter=',')
-    # np.savetxt('y_test.csv',y_test, delimiter=',')
-    # np.savetxt('y_train.csv',y_train, delimiter=',')
+    np.savetxt('x_train.csv',x_train_desc, delimiter=',')
+    np.savetxt('x_test.csv',x_test_desc, delimiter=',')
+    np.savetxt('y_test.csv',y_test, delimiter=',')
+    np.savetxt('y_train.csv',y_train, delimiter=',')
+    print('Sum: ', str(sum(time_m))[:6])
+    print('Mean: ', str(statistics.mean(time_m))[:6])
+    print('StDev: ', str(statistics.stdev(time_m))[:6])
+    print('Variance: ', str(statistics.variance(time_m))[:6])
     x_train_desc = np.genfromtxt('x_train.csv',delimiter=',')
     x_test_desc = np.genfromtxt('x_test.csv', delimiter=',')
     y_train = np.genfromtxt('y_train.csv',delimiter=',')
@@ -171,7 +182,7 @@ if __name__ == "__main__":
                             callbacks=[reduce_lr],verbose=1)
     batch_size = 32
 
-    y_pred = model_desc.predict(x_test_desc,batch_size=batch_size)
+    y_pred = model_desc.predict(x_test_desc,batch_size=batch_size, verbose=1)
     print(classification_report(y_test, np.argmax(y_pred,axis=-1)))
     # print(classification_report(y_test,y_pred))
     # print(roc_auc_score(y_test, y_pred))
